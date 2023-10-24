@@ -1,0 +1,405 @@
+---
+title: "WP6"
+output:
+  pdf_document: default
+  html_document: default
+date: "2022-12-06"
+---
+
+```{r setup, include=FALSE, warning=FALSE, message=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r, echo=FALSE}
+library(tidyr)
+library(dbplyr)
+library(ggplot2)
+library(lubridate)
+library(tidyverse)
+library(scales)
+library(grid)
+library(gridExtra)
+```
+
+```{r, echo=FALSE}
+ufo <- read.csv("/Users/zoeschopick/ufo1.csv", na.strings = c(""))
+ufo<- ufo %>% select(datetime, city, state, country)
+
+```
+
+```{r, echo=FALSE}
+ufo1 <- ufo %>% mutate(datetime = mdy_hm(datetime))
+```
+
+
+```{r, echo=FALSE}
+ufo1 <- ufo1 %>%
+  mutate(sight_year = as.integer(as.character(year(ufo1$datetime)) )) %>%
+  mutate(sight_month = as.integer(as.character(month(ufo1$datetime)))) %>%
+  mutate(sight_time = as.integer(as.character(hour(ufo1$datetime))))
+```
+
+```{r, echo=FALSE}
+ufo2 <- ufo1 %>% drop_na(country) %>% mutate(country = gsub("ca", "Canada", country), country = gsub("gb", "United Kingdom", country), country = gsub("us", "United States", country), country = gsub("au", "Australia", country), country = gsub("de", "Germany", country))
+```
+
+
+```{r, echo=FALSE}
+ufo_us <- ufo2 %>% filter(country=="United States") 
+
+ufo_us <- ufo_us %>% mutate(state = toupper(state))
+```
+
+
+Best Plots
+```{r, echo=FALSE}
+ggplot(ufo2, aes(x=country)) + geom_bar(fill = c("grey", "grey", "grey", "grey", "forestgreen")) + scale_x_discrete(labels = c("Australia", "Canada", "Germany", "United Kingdom", "United States")) + theme_bw() + theme(axis.text.x = element_text(
+                           size = 10), plot.title = element_text(hjust = 0.5, size=15), axis.title = element_text(size = 12)) + xlab("Country") + ylab("Number of Sightings") + ggtitle("Best Country to See UFOs") + theme(plot.title = element_text(face = "bold"))
+```
+
+
+```{r, echo=FALSE}
+ufo_us_region <- ufo_us %>% mutate(state = gsub("AK", "West", state), state = gsub("CA", "West", state),state = gsub("WA", "West", state), state = gsub("OR", "West", state), state = gsub("MT", "West", state), state = gsub("ID", "West", state), state = gsub("WY", "West", state), state = gsub("NV", "West", state), state = gsub("UT", "West", state), state = gsub("CO", "West", state), state = gsub("HI", "West", state) )%>%
+  mutate(state=gsub("NE", "Midwest", state),state=gsub("ND", "Midwest", state), state=gsub("SD", "Midwest", state), state=gsub("KS", "Midwest", state), state=gsub("MN", "Midwest", state), state=gsub("IA", "Midwest", state ), state=gsub("MO", "Midwest", state), state=gsub("WI", "Midwest", state ), state=gsub("IL", "Midwest", state ), state=gsub("IN", "Midwest", state ), state=gsub("OH", "Midwest", state ), state=gsub("MI", "Midwest", state )) %>% 
+  mutate(state=gsub("AZ", "Southwest", state ), state=gsub("NM", "Southwest", state ), state=gsub("TX", "Southwest", state ), state=gsub("OK", "Southwest", state )) %>%
+  mutate(state=gsub("AR", "Southeast", state ), state=gsub("LA", "Southeast", state ), state=gsub("MS", "Southeast", state ), state=gsub("TN", "Southeast", state ), state=gsub("AL", "Southeast", state ), state=gsub("GA", "Southeast", state ), state=gsub("KY", "Southeast", state ), state=gsub("WV", "Southeast", state ),state=gsub("VA", "Southeast", state ), state=gsub("NC", "Southeast", state ), state=gsub("SC", "Southeast", state ), state=gsub("FL", "Southeast", state )) %>%
+  mutate(state=gsub("ME", "Northeast", state ), state=gsub("VT", "Northeast", state ), state=gsub("NH", "Northeast", state ), state=gsub("CT", "Northeast", state ), state=gsub("RI", "Northeast", state ), state=gsub("NY", "Northeast", state ), state=gsub("NJ", "Northeast", state ), state=gsub("PA", "Northeast", state ), state=gsub("MD", "Northeast", state ),state=gsub("DE", "Northeast", state ), state=gsub("MA", "Northeast", state ), state = gsub("DC", "Northeast", state), state = gsub("PR", "Southeast", state) )
+```
+
+
+```{r, echo=FALSE}
+ggplot(ufo_us_region, aes(x=state)) + geom_bar(fill = c("grey", "grey", "grey", "grey", "forestgreen")) + theme_bw() +theme(axis.text.x = element_text(size = 10), plot.title = element_text(hjust = 0.5, size=15), axis.title = element_text(size = 12)) + xlab("Region") + ylab("Number of Sightings") + ggtitle("Best US Region to See UFOs") + theme(plot.title = element_text(face = "bold"))
+```
+
+```{r, echo=FALSE}
+ufo_west <- ufo_us %>% filter(state == "AK"|state == "CA" | state == "WA" | state == "OR" | state == "MT" | state == "ID"| state == "WY" | state == "NV" | state == "UT" | state == "CO" | state == "HI")
+```
+
+
+
+```{r, echo=FALSE}
+ggplot(ufo_west, aes(x= state)) + geom_bar(fill = c("grey", "forestgreen", "grey", "grey", "grey", "grey", "grey", "grey", "grey", "grey", "grey")) + theme_bw() + theme(axis.text.x = element_text(
+                           size = 10), plot.title = element_text(hjust = 0.5, size=15), axis.title = element_text(size = 12))+
+  xlab("State") + ylab("Number of Sightings") + ggtitle("Best States to See UFOs (Western Region US)") + theme(plot.title = element_text(face = "bold"))
+```
+```{r, echo=FALSE}
+
+ufo_ca <- ufo_us %>% filter(state == "CA")
+
+ufo_ca <- ufo_ca %>% mutate(sight_month = month.name[sight_month]) %>% mutate(sight_month = factor(sight_month, levels = c("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"))) 
+
+ufo_ca1 <- ufo_ca %>% group_by(sight_month) %>% summarise(value=n())
+
+ufo_ca_summer <- ufo_ca %>% filter(sight_month == "June" | sight_month == "July" | sight_month == "August")
+ufo_ca_summer1 <- ufo_ca_summer %>% group_by(sight_time) %>% summarise(value = n())
+ 
+ufo_ca_summer2<- ufo_ca_summer %>% group_by(city) %>% summarise(value=n())
+
+```
+
+
+```{r, echo=FALSE}
+ggplot(ufo_ca1, aes(x=sight_month,y = value, group = 1))  + geom_line(size = 0.7)+ geom_point(col = c("grey", "grey", "grey", "grey", "grey", "forestgreen", "forestgreen", "forestgreen", "grey", "grey", "grey", "grey"), size = 3) + scale_x_discrete(labels = c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")) + theme_bw() + xlab("Month of Sighting") + ylab("Number of Sightings") + theme(axis.text.x = element_text(
+                           size = 10), plot.title = element_text(hjust = 0.5, size=15), axis.title = element_text(size = 12)) +
+  ggtitle("Best Months to See UFOs (California)") + theme(plot.title = element_text(face = "bold"))
+```
+```{r, echo=FALSE}
+ufo_ca_summer <- ufo_ca %>% filter(sight_month == "June" | sight_month == "July" | sight_month == "August")
+ufo_ca_summer1 <- ufo_ca_summer %>% group_by(sight_time) %>% summarise(value = n())
+
+```
+
+```{r, echo=FALSE}
+ufo_ca_summer1 <- ufo_ca_summer1 %>% mutate(sighttime = c("12am", "1am", "2am", "3am", "4am", "5am", "6am", "7am", "8am", "9am", "10am", "11am", "12pm", "1pm", "2pm", "3pm", "4pm", "5pm", "6pm", "7pm", "8pm", "9pm", "10pm", "11pm")) %>% mutate(sighttime = factor(sighttime, levels = c("12am", "1am", "2am", "3am", "4am", "5am", "6am", "7am", "8am", "9am", "10am", "11am", "12pm", "1pm", "2pm", "3pm", "4pm", "5pm", "6pm", "7pm", "8pm", "9pm", "10pm", "11pm"))) 
+```
+
+
+```{r, echo=FALSE}
+ggplot(ufo_ca_summer1, aes(x=sighttime,y = value, group = 1)) + geom_line() + geom_point(col = c("grey", "grey", "grey", "grey", "grey", "grey", "grey", "grey", "grey", "grey", "grey", "grey", "grey", "grey", "grey", "grey", "grey", "grey", "grey", "grey", "grey", "forestgreen", "forestgreen", "grey"), size= 3) + theme_minimal() + theme(axis.text.x=element_text(angle = 90)) + scale_x_discrete(labels =c("12am", "1am", "2am", "3am", "4am", "5am", "6am", "7am", "8am", "9am", "10am", "11am", "12pm", "1pm", "2pm", "3pm", "4pm", "5pm", "6pm", "7pm", "8pm", "9pm", "10pm", "11pm")) + theme(axis.text.x = element_text(
+                           size = 10), plot.title = element_text(hjust = 0.5, size=15), axis.title = element_text(size = 12)) + ggtitle("Best Times of Day to See UFOs (Summer in CA)") + xlab("Time") + ylab("Number of Sightings") + theme(plot.title = element_text(face = "bold"))
+```
+```{r, echo=FALSE}
+cities <- c("Los Angeles", "San Diego", "Sacramento", "San Jose", "Fresno")
+sitings <- c(124, 108, 74, 56, 50)
+
+ufo_ca_cities <- data.frame(cities, sitings)
+```
+```{r, echo=FALSE}
+h_line<- 4
+ggplot(ufo_ca_cities, aes(x=cities, y = sitings)) + geom_col(fill = "forestgreen", alpha = 0.9) +  theme_minimal()+ geom_hline(yintercept=h_line, col = "darkblue") + geom_text(aes(h_line, 4, label = "CA City Avg", vjust = 2.2, hjust = 4.5, ), col = "darkblue") + ggtitle("Best CA Cities for UFO Sightings") + theme(axis.text.x = element_text(
+                           size = 10), plot.title = element_text(hjust = 0.5, size=15), axis.title = element_text(size = 12)) + xlab("City") + ylab("Number of Sightings") + theme(plot.title = element_text(face = "bold"))
+```
+
+\newpage
+
+Worst plots
+
+```{r, echo=FALSE}
+ggplot(ufo2, aes(x=country)) + geom_bar(fill = c("red3", "red3", "red3", "red3", "grey")) + scale_x_discrete(labels = c("Australia", "Canada", "Germany", "United Kingdom", "United States")) + theme_bw() + theme(axis.text.x = element_text(
+                           size = 10), plot.title = element_text(hjust = 0.5, size=15), axis.title = element_text(size = 12)) + xlab("Country") + ylab("Number of Sightings") + ggtitle("Worst Countries for UFO Sightings") + theme(plot.title = element_text(face = "bold"))
+```
+
+```{r, echo=FALSE}
+ufo_au <- ufo2 %>% filter(country == "Australia") %>% select (-state)
+ufo_can <- ufo2 %>% filter(country == "Canada")
+ufo_de <- ufo2 %>% filter(country == "Germany") %>% select(-state)
+ufo_gb <- ufo2 %>% filter(country == "United Kingdom") %>% select(-state)
+```
+
+
+```{r, echo=FALSE}
+ufo_worst <- ufo2 %>% filter(country != "United States")
+```
+
+```{r, echo=FALSE}
+ufo_worst_month <- ufo_worst %>% group_by(country, sight_month) %>% summarise(value=n(), .groups = "drop") %>% mutate(sight_month = month.name[sight_month]) %>% mutate(sight_month = factor(sight_month, levels = c("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December")))
+
+```
+
+```{r, echo=FALSE}
+ufo_can_months<- ufo_can %>% mutate(sight_month = month.name[sight_month]) %>% mutate(sight_month = factor(sight_month, levels = c("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"))) %>% group_by(sight_month) %>% summarise(value=n())
+
+
+```
+```{r, echo=FALSE}
+p1 <- ggplot(ufo_can_months, aes(x=sight_month,y = value, group = 1)) +  geom_line(col = "darkblue", size = 0.6) + geom_point(col = c("red3", "red3", "grey", "grey", "grey", "grey", "grey", "grey", "grey", "grey", "grey", "red3"), size = 2) + scale_x_discrete(labels = c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")) + theme_bw() + xlab("Month") + ylab("Number of Sightings") + theme(axis.text.x = element_text(
+                           size = 8), plot.title = element_text(hjust = 0.5, size=13), axis.title = element_text(size = 10)) + ggtitle("Canada") + theme(axis.text.x=element_text(angle = 30))
+ 
+```
+
+
+```{r, echo=FALSE}
+ufo_au_months<- ufo_au %>% mutate(sight_month = month.name[sight_month]) %>% mutate(sight_month = factor(sight_month, levels = c("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"))) %>% group_by(sight_month) %>% summarise(value=n())
+
+p2 <- ggplot(ufo_au_months, aes(x=sight_month,y = value, group = 1)) +  geom_line(col = "aquamarine", size = 0.6) + geom_point(col = c("grey", "red3", "grey", "grey", "grey", "grey", "grey", "grey", "red3", "red3", "grey", "grey"), size = 2)  + scale_x_discrete(labels = c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")) + theme_bw() + xlab("Month") + ylab("Number of Sightings") + theme(axis.text.x = element_text(
+                           size = 8), plot.title = element_text(hjust = 0.5, size=13), axis.title = element_text(size = 10)) + ggtitle("Australia") + theme(axis.text.x=element_text(angle = 30))
+```
+
+```{r, echo=FALSE}
+ufo_de_months<- ufo_de %>% mutate(sight_month = month.name[sight_month]) %>% mutate(sight_month = factor(sight_month, levels = c("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"))) %>% group_by(sight_month) %>% summarise(value=n())
+
+p3 <- ggplot(ufo_de_months, aes(x=sight_month,y = value, group = 1)) +  geom_line(col = "goldenrod3", size = 0.6) + geom_point(col = c("grey", "grey", "grey", "grey", "grey", "grey", "grey", "grey", "grey", "red3", "red3", "grey"), size = 2) + scale_x_discrete(labels = c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")) + theme_bw() + xlab("Month") + ylab("Number of Sightings") + theme(axis.text.x = element_text(
+                           size = 8), plot.title = element_text(hjust = 0.5, size=13), axis.title = element_text(size = 10)) + ggtitle("Germany") + theme(axis.text.x=element_text(angle = 30))
+```
+
+```{r, echo=FALSE}
+
+ufo_gb_months<- ufo_gb %>% mutate(sight_month = month.name[sight_month]) %>% mutate(sight_month = factor(sight_month, levels = c("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"))) %>% group_by(sight_month) %>% summarise(value=n())
+
+p4 <- ggplot(ufo_gb_months, aes(x=sight_month,y = value, group = 1))  + geom_line(col = "deeppink3", size = 0.6)  + geom_point(col = c("grey", "red3", "red3", "grey", "grey", "grey", "grey", "grey", "grey", "red3", "red3", "grey"), size = 2) + scale_x_discrete(labels = c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")) + theme_bw() + xlab("Month") + ylab("Number of Sightings") + theme(axis.text.x = element_text(
+                           size = 8), plot.title = element_text(hjust = 0.5, size=13), axis.title = element_text(size = 10)) + ggtitle("United Kingdom") + theme(axis.text.x=element_text(angle = 30))
+```
+
+```{r, echo=FALSE}
+grid.arrange(p2, p1, p3, p4, ncol =2 , top= textGrob(expression(bold("Worst Months to See UFOs"))))
+```
+
+```{r, echo=FALSE}
+ufo_worst_time <- ufo_worst %>% group_by(country, sight_time) %>% summarise(value=n(), .groups = "drop")  %>% mutate(sighttime = c("12am", "1am", "2am", "3am", "4am", "5am", "6am", "7am", "8am", "9am", "10am", "11am", "12pm", "1pm", "2pm", "3pm", "4pm", "5pm", "6pm", "7pm", "8pm", "9pm", "10pm", "11pm", "12am", "1am", "2am", "3am", "4am", "5am", "6am", "7am", "8am", "9am", "10am", "11am", "12pm", "1pm", "2pm", "3pm", "4pm", "5pm", "6pm", "7pm", "8pm", "9pm", "10pm", "11pm", "12am", "1am", "2am", "3am", "4am", "5am", "6am", "7am", "8am", "11am", "12pm", "1pm", "2pm", "3pm", "4pm", "5pm", "6pm", "7pm", "8pm", "9pm", "10pm", "11pm", "12am", "1am", "2am", "3am", "4am", "5am", "6am", "7am", "8am", "9am", "10am", "11am", "12pm", "1pm", "2pm", "3pm", "4pm", "5pm", "6pm", "7pm", "8pm", "9pm", "10pm", "11pm")) %>% mutate(sighttime = factor(sighttime, levels = c("12am", "1am", "2am", "3am", "4am", "5am", "6am", "7am", "8am", "9am", "10am", "11am", "12pm", "1pm", "2pm", "3pm", "4pm", "5pm", "6pm", "7pm", "8pm", "9pm", "10pm", "11pm"))) 
+```
+
+
+
+```{r, echo=FALSE}
+ggplot(ufo_worst_time, aes(x=sighttime,y = value, group = country, col = country)) + geom_line(size = 1) + theme_bw() + theme(axis.text.x=element_text(angle = 80, vjust = 0.7)) + scale_x_discrete(labels =c("12am", "1am", "2am", "3am", "4am", "5am", "6am", "7am", "8am", "9am", "10am", "11am", "12pm", "1pm", "2pm", "3pm", "4pm", "5pm", "6pm", "7pm", "8pm", "9pm", "10pm", "11pm")) +  theme(axis.text.x = element_text(
+                           size = 10, colour = c("black", "black", "black", "black", "black", "red3", "red3", "red3", "red3", "red3", "red3", "red3", "red3", "red3", "red3", "black", "black", "black", "black", "black", "black", "black", "black", "black")), plot.title = element_text(hjust = 0.5, size=15), axis.title = element_text(size = 11)) + ggtitle("Worst Times of Day to See UFOs") + xlab("Time") + ylab("Number of Sightings") + scale_color_manual(values = c("aquamarine1", "darkblue", "goldenrod3", "deeppink3")) + theme(plot.title = element_text(face = "bold"))
+```
+\newpage
+
+Code
+
+
+```{r, eval=FALSE}
+library(tidyr)
+library(dbplyr)
+library(ggplot2)
+library(lubridate)
+library(tidyverse)
+```
+
+```{r, eval=FALSE}
+ufo <- read.csv("/Users/zoeschopick/ufo1.csv", na.strings = c(""))
+ufo<- ufo %>% select(datetime, city, state, country)
+
+```
+
+```{r, eval=FALSE}
+ufo1 <- ufo %>% mutate(datetime = mdy_hm(datetime))
+```
+
+
+```{r, eval=FALSE}
+ufo1 <- ufo1 %>%
+  mutate(sight_year = as.integer(as.character(year(ufo1$datetime)) )) %>%
+  mutate(sight_month = as.integer(as.character(month(ufo1$datetime)))) %>%
+  mutate(sight_time = as.integer(as.character(hour(ufo1$datetime))))
+```
+
+```{r, eval=FALSE}
+ufo2 <- ufo1 %>% drop_na(country) %>% mutate(country = gsub("ca", "Canada", country), country = gsub("gb", "United Kingdom", country), country = gsub("us", "United States", country), country = gsub("au", "Australia", country), country = gsub("de", "Germany", country))
+```
+
+
+```{r, eval=FALSE}
+ufo_us <- ufo2 %>% filter(country=="United States") 
+
+ufo_us <- ufo_us %>% mutate(state = toupper(state))
+```
+
+
+Best Plots
+```{r, eval=FALSE}
+ggplot(ufo2, aes(x=country)) + geom_bar(fill = c("grey", "grey", "grey", "grey", "forestgreen")) + scale_x_discrete(labels = c("Australia", "Canada", "Germany", "United Kingdom", "United States")) + theme_bw() + theme(axis.text.x = element_text(
+                           size = 10), plot.title = element_text(hjust = 0.5, size=15), axis.title = element_text(size = 12)) + xlab("Country") + ylab("Number of Sightings") + ggtitle("UFO Sightings by Country") + theme(plot.title = element_text(face = "bold"))
+```
+
+```{r, eval=FALSE}
+ufo_us_region <- ufo_us %>% mutate(state = gsub("AK", "West", state), state = gsub("CA", "West", state),state = gsub("WA", "West", state), state = gsub("OR", "West", state), state = gsub("MT", "West", state), state = gsub("ID", "West", state), state = gsub("WY", "West", state), state = gsub("NV", "West", state), state = gsub("UT", "West", state), state = gsub("CO", "West", state), state = gsub("HI", "West", state) )%>%
+  mutate(state=gsub("NE", "Midwest", state),state=gsub("ND", "Midwest", state), state=gsub("SD", "Midwest", state), state=gsub("KS", "Midwest", state), state=gsub("MN", "Midwest", state), state=gsub("IA", "Midwest", state ), state=gsub("MO", "Midwest", state), state=gsub("WI", "Midwest", state ), state=gsub("IL", "Midwest", state ), state=gsub("IN", "Midwest", state ), state=gsub("OH", "Midwest", state ), state=gsub("MI", "Midwest", state )) %>% 
+  mutate(state=gsub("AZ", "Southwest", state ), state=gsub("NM", "Southwest", state ), state=gsub("TX", "Southwest", state ), state=gsub("OK", "Southwest", state )) %>%
+  mutate(state=gsub("AR", "Southeast", state ), state=gsub("LA", "Southeast", state ), state=gsub("MS", "Southeast", state ), state=gsub("TN", "Southeast", state ), state=gsub("AL", "Southeast", state ), state=gsub("GA", "Southeast", state ), state=gsub("KY", "Southeast", state ), state=gsub("WV", "Southeast", state ),state=gsub("VA", "Southeast", state ), state=gsub("NC", "Southeast", state ), state=gsub("SC", "Southeast", state ), state=gsub("FL", "Southeast", state )) %>%
+  mutate(state=gsub("ME", "Northeast", state ), state=gsub("VT", "Northeast", state ), state=gsub("NH", "Northeast", state ), state=gsub("CT", "Northeast", state ), state=gsub("RI", "Northeast", state ), state=gsub("NY", "Northeast", state ), state=gsub("NJ", "Northeast", state ), state=gsub("PA", "Northeast", state ), state=gsub("MD", "Northeast", state ),state=gsub("DE", "Northeast", state ), state=gsub("MA", "Northeast", state ), state = gsub("DC", "Northeast", state), state = gsub("PR", "Southeast", state) )
+```
+
+
+```{r, eval=FALSE}
+ggplot(ufo_us_region, aes(x=state)) + geom_bar(fill = c("grey", "grey", "grey", "grey", "forestgreen")) + theme_bw() +theme(axis.text.x = element_text(size = 10), plot.title = element_text(hjust = 0.5, size=15), axis.title = element_text(size = 12)) + xlab("Region") + ylab("Number of Sightings") + ggtitle("UFO Sightings by Region of the US") + theme(plot.title = element_text(face = "bold"))
+```
+
+```{r, eval=FALSE}
+ufo_west <- ufo_us %>% filter(state == "AK"|state == "CA" | state == "WA" | state == "OR" | state == "MT" | state == "ID"| state == "WY" | state == "NV" | state == "UT" | state == "CO" | state == "HI")
+```
+
+
+
+```{r, eval=FALSE}
+ggplot(ufo_west, aes(x= state)) + geom_bar(fill = c("grey", "forestgreen", "grey", "grey", "grey", "grey", "grey", "grey", "grey", "grey", "grey")) + theme_bw() + theme(axis.text.x = element_text(
+                           size = 10), plot.title = element_text(hjust = 0.5, size=15), axis.title = element_text(size = 12))+
+  xlab("State") + ylab("Number of Sightings") + ggtitle("UFO Sightings in Western States") + theme(plot.title = element_text(face = "bold"))
+```
+
+```{r, eval=FALSE}
+
+ufo_ca <- ufo_us %>% filter(state == "CA")
+
+ufo_ca <- ufo_ca %>% mutate(sight_month = month.name[sight_month]) %>% mutate(sight_month = factor(sight_month, levels = c("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"))) 
+
+ufo_ca1 <- ufo_ca %>% group_by(sight_month) %>% summarise(value=n())
+ 
+ufo_ca_summer2<- ufo_ca_summer %>% group_by(city) %>% summarise(value=n())
+
+```
+
+
+```{r, eval=FALSE}
+ggplot(ufo_ca1, aes(x=sight_month,y = value, group = 1))  + geom_line(size = 0.7)+ geom_point(col = c("grey", "grey", "grey", "grey", "grey", "forestgreen", "forestgreen", "forestgreen", "grey", "grey", "grey", "grey"), size = 3) + scale_x_discrete(labels = c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")) + theme_bw() + xlab("Month of Sighting") + ylab("Number of Sightings") + theme(axis.text.x = element_text(
+                           size = 10), plot.title = element_text(hjust = 0.5, size=15), axis.title = element_text(size = 12)) +
+  ggtitle("California UFO Sightings Per Month") + theme(plot.title = element_text(face = "bold"))
+```
+
+
+```{r, eval=FALSE}
+ufo_ca_summer <- ufo_ca %>% filter(sight_month == "June" | sight_month == "July" | sight_month == "August")
+ufo_ca_summer1 <- ufo_ca_summer %>% group_by(sight_time) %>% summarise(value = n())
+
+```
+
+```{r, eval=FALSE}
+ufo_ca_summer1 <- ufo_ca_summer1 %>% mutate(sighttime = c("12am", "1am", "2am", "3am", "4am", "5am", "6am", "7am", "8am", "9am", "10am", "11am", "12pm", "1pm", "2pm", "3pm", "4pm", "5pm", "6pm", "7pm", "8pm", "9pm", "10pm", "11pm")) %>% mutate(sighttime = factor(sighttime, levels = c("12am", "1am", "2am", "3am", "4am", "5am", "6am", "7am", "8am", "9am", "10am", "11am", "12pm", "1pm", "2pm", "3pm", "4pm", "5pm", "6pm", "7pm", "8pm", "9pm", "10pm", "11pm"))) 
+```
+
+
+```{r, eval=FALSE}
+ggplot(ufo_ca_summer1, aes(x=sighttime,y = value, group = 1)) + geom_line() + geom_point(col = c("grey", "grey", "grey", "grey", "grey", "grey", "grey", "grey", "grey", "grey", "grey", "grey", "grey", "grey", "grey", "grey", "grey", "grey", "grey", "grey", "grey", "forestgreen", "forestgreen", "grey"), size= 3) + theme_minimal() + theme(axis.text.x=element_text(angle = 90)) + scale_x_discrete(labels =c("12am", "1am", "2am", "3am", "4am", "5am", "6am", "7am", "8am", "9am", "10am", "11am", "12pm", "1pm", "2pm", "3pm", "4pm", "5pm", "6pm", "7pm", "8pm", "9pm", "10pm", "11pm")) + theme(axis.text.x = element_text(
+                           size = 10), plot.title = element_text(hjust = 0.5, size=15), axis.title = element_text(size = 12)) + ggtitle("Number of Sightings Over One Day in CA Summer") + xlab("Time") + ylab("Number of Sightings") + theme(plot.title = element_text(face = "bold"))
+```
+
+```{r, eval=FALSE}
+cities <- c("Los Angeles", "San Diego", "Sacramento", "San Jose", "Fresno")
+sitings <- c(124, 108, 74, 56, 50)
+
+ufo_ca_cities <- data.frame(cities, sitings)
+```
+```{r, eval=FALSE}
+h_line<- 4
+ggplot(ufo_ca_cities, aes(x=cities, y = sitings)) + geom_col(fill = "forestgreen", alpha = 0.9) +  theme_minimal()+ geom_hline(yintercept=h_line, col = "darkblue") + geom_text(aes(h_line, 4, label = "CA City Avg", vjust = 2.2, hjust = 5.5, ), col = "darkblue") + ggtitle("Best CA Cities for UFO Sitings") + theme(axis.text.x = element_text(
+                           size = 10), plot.title = element_text(hjust = 0.5, size=15), axis.title = element_text(size = 12)) + xlab("City") + ylab("Number of Sitings") + theme(plot.title = element_text(face = "bold"))
+```
+
+
+
+Worst plots
+
+```{r, eval=FALSE}
+ggplot(ufo2, aes(x=country)) + geom_bar(fill = c("red3", "red3", "red3", "red3", "grey")) + scale_x_discrete(labels = c("Australia", "Canada", "Germany", "United Kingdom", "United States")) + theme_bw() + theme(axis.text.x = element_text(
+                           size = 10), plot.title = element_text(hjust = 0.5, size=15), axis.title = element_text(size = 12)) + xlab("Country") + ylab("Number of Sightings") + ggtitle("UFO Sightings by Country") + theme(plot.title = element_text(face = "bold"))
+```
+
+```{r, eval=FALSE}
+ufo_au <- ufo2 %>% filter(country == "Australia") %>% select (-state)
+ufo_can <- ufo2 %>% filter(country == "Canada")
+ufo_de <- ufo2 %>% filter(country == "Germany") %>% select(-state)
+ufo_gb <- ufo2 %>% filter(country == "United Kingdom") %>% select(-state)
+```
+
+
+```{r, eval=FALSE}
+ufo_worst <- ufo2 %>% filter(country != "United States")
+```
+
+```{r, eval=FALSE}
+ufo_worst_month <- ufo_worst %>% group_by(country, sight_month) %>% summarise(value=n(), .groups = "drop") %>% mutate(sight_month = month.name[sight_month]) %>% mutate(sight_month = factor(sight_month, levels = c("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December")))
+
+```
+
+```{r, eval=FALSE}
+ufo_can_months<- ufo_can %>% mutate(sight_month = month.name[sight_month]) %>% mutate(sight_month = factor(sight_month, levels = c("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"))) %>% group_by(sight_month) %>% summarise(value=n())
+
+
+```
+```{r, eval=FALSE}
+p1 <- ggplot(ufo_can_months, aes(x=sight_month,y = value, group = 1)) +  geom_line(col = "darkblue", size = 0.6) + geom_point(col = c("red3", "red3", "grey", "grey", "grey", "grey", "grey", "grey", "grey", "grey", "grey", "red3"), size = 2) + scale_x_discrete(labels = c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")) + theme_bw() + xlab("Month of Sighting") + ylab("Number of Sightings") + theme(axis.text.x = element_text(
+                           size = 8), plot.title = element_text(hjust = 0.5, size=13), axis.title = element_text(size = 10)) + ggtitle("Canada") + theme(axis.text.x=element_text(angle = 30))
+ 
+```
+
+
+```{r, eval=FALSE}
+ufo_au_months<- ufo_au %>% mutate(sight_month = month.name[sight_month]) %>% mutate(sight_month = factor(sight_month, levels = c("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"))) %>% group_by(sight_month) %>% summarise(value=n())
+
+p2 <- ggplot(ufo_au_months, aes(x=sight_month,y = value, group = 1)) +  geom_line(col = "aquamarine", size = 0.6) + geom_point(col = c("grey", "red3", "grey", "grey", "grey", "grey", "grey", "grey", "red3", "red3", "grey", "grey"), size = 2)  + scale_x_discrete(labels = c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")) + theme_bw() + xlab("Month of Sighting") + ylab("Number of Sightings") + theme(axis.text.x = element_text(
+                           size = 8), plot.title = element_text(hjust = 0.5, size=13), axis.title = element_text(size = 10)) + ggtitle("Australia") + theme(axis.text.x=element_text(angle = 30))
+```
+
+```{r, eval=FALSE}
+ufo_de_months<- ufo_de %>% mutate(sight_month = month.name[sight_month]) %>% mutate(sight_month = factor(sight_month, levels = c("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"))) %>% group_by(sight_month) %>% summarise(value=n())
+
+p3 <- ggplot(ufo_de_months, aes(x=sight_month,y = value, group = 1)) +  geom_line(col = "goldenrod3", size = 0.6) + geom_point(col = c("grey", "grey", "grey", "grey", "grey", "grey", "grey", "grey", "grey", "red3", "red3", "grey"), size = 2) + scale_x_discrete(labels = c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")) + theme_bw() + xlab("Month of Sighting") + ylab("Number of Sightings") + theme(axis.text.x = element_text(
+                           size = 8), plot.title = element_text(hjust = 0.5, size=13), axis.title = element_text(size = 10)) + ggtitle("Germany") + theme(axis.text.x=element_text(angle = 30))
+```
+
+```{r, eval=FALSE}
+
+ufo_gb_months<- ufo_gb %>% mutate(sight_month = month.name[sight_month]) %>% mutate(sight_month = factor(sight_month, levels = c("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"))) %>% group_by(sight_month) %>% summarise(value=n())
+
+p4 <- ggplot(ufo_gb_months, aes(x=sight_month,y = value, group = 1))  + geom_line(col = "deeppink3", size = 0.6)  + geom_point(col = c("grey", "red3", "red3", "grey", "grey", "grey", "grey", "grey", "grey", "red3", "red3", "grey"), size = 2) + scale_x_discrete(labels = c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")) + theme_bw() + xlab("Month of Sighting") + ylab("Number of Sightings") + theme(axis.text.x = element_text(
+                           size = 8), plot.title = element_text(hjust = 0.5, size=13), axis.title = element_text(size = 10)) + ggtitle("United Kingdom") + theme(axis.text.x=element_text(angle = 30))
+```
+
+```{r, eval=FALSE}
+grid.arrange(p2, p1, p3, p4, ncol =2 , top= textGrob(expression(bold("UFO Sightings Per Month"))))
+```
+
+```{r, eval=FALSE}
+ufo_worst_time <- ufo_worst %>% group_by(country, sight_time) %>% summarise(value=n(), .groups = "drop")  %>% mutate(sighttime = c("12am", "1am", "2am", "3am", "4am", "5am", "6am", "7am", "8am", "9am", "10am", "11am", "12pm", "1pm", "2pm", "3pm", "4pm", "5pm", "6pm", "7pm", "8pm", "9pm", "10pm", "11pm", "12am", "1am", "2am", "3am", "4am", "5am", "6am", "7am", "8am", "9am", "10am", "11am", "12pm", "1pm", "2pm", "3pm", "4pm", "5pm", "6pm", "7pm", "8pm", "9pm", "10pm", "11pm", "12am", "1am", "2am", "3am", "4am", "5am", "6am", "7am", "8am", "11am", "12pm", "1pm", "2pm", "3pm", "4pm", "5pm", "6pm", "7pm", "8pm", "9pm", "10pm", "11pm", "12am", "1am", "2am", "3am", "4am", "5am", "6am", "7am", "8am", "9am", "10am", "11am", "12pm", "1pm", "2pm", "3pm", "4pm", "5pm", "6pm", "7pm", "8pm", "9pm", "10pm", "11pm")) %>% mutate(sighttime = factor(sighttime, levels = c("12am", "1am", "2am", "3am", "4am", "5am", "6am", "7am", "8am", "9am", "10am", "11am", "12pm", "1pm", "2pm", "3pm", "4pm", "5pm", "6pm", "7pm", "8pm", "9pm", "10pm", "11pm"))) 
+```
+
+
+
+```{r, eval=FALSE}
+ggplot(ufo_worst_time, aes(x=sighttime,y = value, group = country, col = country)) + geom_line(size = 1) + theme_bw() + theme(axis.text.x=element_text(angle = 80, vjust = 0.7)) + scale_x_discrete(labels =c("12am", "1am", "2am", "3am", "4am", "5am", "6am", "7am", "8am", "9am", "10am", "11am", "12pm", "1pm", "2pm", "3pm", "4pm", "5pm", "6pm", "7pm", "8pm", "9pm", "10pm", "11pm")) +  theme(axis.text.x = element_text(
+                           size = 10, colour = c("black", "black", "black", "black", "black", "red3", "red3", "red3", "red3", "red3", "red3", "red3", "red3", "red3", "red3", "black", "black", "black", "black", "black", "black", "black", "black", "black")), plot.title = element_text(hjust = 0.5, size=15), axis.title = element_text(size = 11)) + ggtitle("UFO Sightings Over One Day") + xlab("Time") + ylab("Number of Sightings") + scale_color_manual(values = c("aquamarine1", "darkblue", "goldenrod3", "deeppink3")) + theme(plot.title = element_text(face = "bold"))
+```
+
+
